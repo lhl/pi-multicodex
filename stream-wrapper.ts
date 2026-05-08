@@ -6,15 +6,15 @@ import {
 	createAssistantMessageEventStream,
 	type Model,
 	type SimpleStreamOptions,
-} from "@mariozechner/pi-ai";
+} from "@earendil-works/pi-ai";
+import type { AccountManager } from "./account-manager";
+import { isQuotaErrorMessage } from "./quota";
 import {
 	createErrorAssistantMessage,
 	createLinkedAbortController,
 	normalizeUnknownError,
 	rewriteProviderOnEvent,
-} from "pi-provider-utils/streams";
-import type { AccountManager } from "./account-manager";
-import { isQuotaErrorMessage } from "./quota";
+} from "./utils/streams";
 
 const MAX_ROTATION_RETRIES = 5;
 

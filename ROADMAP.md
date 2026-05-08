@@ -1,8 +1,8 @@
-# @victor-software-house/pi-multicodex roadmap
+# @lhl/pi-multicodex roadmap
 
 ## Product focus
 
-`@victor-software-house/pi-multicodex` is a pi extension focused on rotating multiple ChatGPT Codex OAuth accounts for the `openai-codex-responses` API.
+`@lhl/pi-multicodex` is a pi extension focused on rotating multiple ChatGPT Codex OAuth accounts for the `openai-codex-responses` API.
 
 The roadmap is centered on:
 
@@ -46,7 +46,7 @@ The current shipped behavior is:
 
 ## Decisions already locked in
 
-- **Package name:** `@victor-software-house/pi-multicodex`
+- **Package name:** `@lhl/pi-multicodex`
 - **Scope:** Codex only
 - **Local package manager:** pnpm
 - **Primary release path:** npmjs with trusted publishing

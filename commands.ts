@@ -1,11 +1,11 @@
 import { promises as fs, constants as fsConstants } from "node:fs";
 import path from "node:path";
-import { loginOpenAICodex } from "@mariozechner/pi-ai/oauth";
+import { loginOpenAICodex } from "@earendil-works/pi-ai/oauth";
 import type {
 	ExtensionAPI,
 	ExtensionCommandContext,
-} from "@mariozechner/pi-coding-agent";
-import { DynamicBorder, rawKeyHint } from "@mariozechner/pi-coding-agent";
+} from "@earendil-works/pi-coding-agent";
+import { DynamicBorder, rawKeyHint } from "@earendil-works/pi-coding-agent";
 import {
 	type AutocompleteItem,
 	Container,
@@ -14,19 +14,19 @@ import {
 	Spacer,
 	truncateToWidth,
 	visibleWidth,
-} from "@mariozechner/pi-tui";
-import { getAgentSettingsPath } from "pi-provider-utils/agent-paths";
-import { normalizeUnknownError } from "pi-provider-utils/streams";
+} from "@earendil-works/pi-tui";
 import type { AccountManager } from "./account-manager";
 import { openLoginInBrowser } from "./browser";
 import {
+	type createUsageStatusController,
 	formatUsageSummaryText,
 	loadFooterPreferences,
 	type PercentDisplayMode,
-	type createUsageStatusController,
 } from "./status";
 import { type Account, STORAGE_FILE } from "./storage";
 import { isUsageUntouched } from "./usage";
+import { getAgentSettingsPath } from "./utils/agent-paths";
+import { normalizeUnknownError } from "./utils/streams";
 
 const SETTINGS_FILE = getAgentSettingsPath();
 const NO_ACCOUNTS_MESSAGE =
@@ -607,7 +607,11 @@ async function openAccountManagementFlow(
 			continue;
 		}
 
-		const result = await openAccountManagementPanel(ctx, accountManager, usageMode);
+		const result = await openAccountManagementPanel(
+			ctx,
+			accountManager,
+			usageMode,
+		);
 		if (!result) return;
 
 		if (result.action === "add") {
@@ -885,12 +889,7 @@ async function runRefreshSubcommand(
 		await openAccountManagementFlow(pi, ctx, accountManager, statusController);
 		return;
 	}
-	await refreshSingleAccount(
-		ctx,
-		accountManager,
-		rest,
-		await loadUsageMode(),
-	);
+	await refreshSingleAccount(ctx, accountManager, rest, await loadUsageMode());
 	await statusController.refreshFor(ctx);
 }
 

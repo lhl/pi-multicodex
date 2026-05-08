@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { getAgentPath } from "pi-provider-utils/agent-paths";
 import { z } from "zod";
+import { getAgentPath } from "./utils/agent-paths";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -10,7 +10,7 @@ import { z } from "zod";
 const CURRENT_VERSION = 1;
 
 const SCHEMA_URL =
-	"https://raw.githubusercontent.com/victor-software-house/pi-multicodex/main/schemas/codex-accounts.schema.json";
+	"https://raw.githubusercontent.com/lhl/pi-multicodex/main/schemas/codex-accounts.schema.json";
 
 const AccountSchema = z
 	.object({

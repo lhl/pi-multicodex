@@ -1,4 +1,4 @@
-# @victor-software-house/pi-multicodex
+# @lhl/pi-multicodex
 
 ![MultiCodex main panel](./assets/multicodex-main.png)
 
@@ -11,7 +11,7 @@ You add your Codex accounts once. After that, MultiCodex transparently picks the
 Install from npm:
 
 ```bash
-pi install npm:@victor-software-house/pi-multicodex
+pi install git:https://github.com/lhl/pi-multicodex
 ```
 
 Restart pi. That is all you need — MultiCodex takes over the normal `openai-codex` provider path and auto-imports any Codex auth you have already set up in pi.
@@ -87,7 +87,7 @@ You can customize which fields appear and their ordering with `/multicodex foote
 - **Token refresh.** OAuth tokens are refreshed before expiry so requests do not fail due to stale credentials. You can also force a health refresh with `/multicodex refresh` or re-authenticate explicitly with `/multicodex reauth`.
 - **Usage tracking.** Usage data is fetched from the Codex API and cached for 5 minutes per account. The footer renders cached data immediately and refreshes in the background.
 - **Quota cooldown.** When an account is exhausted, it stays on cooldown until its next known reset time (or 1 hour if the reset time is unknown).
-- **Shared utility seams.** Provider mirroring, stream primitives, and `~/.pi/agent/*` path helpers are shared with `pi-credential-vault` through `@victor-software-house/pi-provider-utils`. MultiCodex still owns account storage, token policy, footer behavior, and command UX.
+- **Shared utility seams.** Stream primitives and `~/.pi/agent/*` path helpers are vendored locally under `utils/`; provider mirroring reads pi's registered model metadata directly. MultiCodex still owns account storage, token policy, footer behavior, and command UX.
 
 ## Local development
 

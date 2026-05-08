@@ -1,8 +1,7 @@
 import {
 	type OAuthCredentials,
 	refreshOpenAICodexToken,
-} from "@mariozechner/pi-ai/oauth";
-import { normalizeUnknownError } from "pi-provider-utils/streams";
+} from "@earendil-works/pi-ai/oauth";
 import { loadImportedOpenAICodexAuth } from "./auth";
 import { isAccountAvailable, pickBestAccount } from "./selection";
 import {
@@ -13,6 +12,7 @@ import {
 } from "./storage";
 import { type CodexUsageSnapshot, getNextResetAt } from "./usage";
 import { fetchCodexUsage } from "./usage-client";
+import { normalizeUnknownError } from "./utils/streams";
 
 const USAGE_CACHE_TTL_MS = 5 * 60 * 1000;
 const USAGE_REQUEST_TIMEOUT_MS = 10 * 1000;
