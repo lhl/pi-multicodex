@@ -11,7 +11,7 @@ import {
 	saveStorage,
 } from "./storage";
 import { type CodexUsageSnapshot, getNextResetAt } from "./usage";
-import { fetchCodexUsage } from "./usage-client";
+import { fetchCodexUsage, UsageRequestError } from "./usage-client";
 import { normalizeUnknownError } from "./utils/streams";
 
 const USAGE_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -30,6 +30,7 @@ export class AccountManager {
 	private manualEmail?: string;
 	private stateChangeHandlers = new Set<StateChangeHandler>();
 	private warnedAuthFailureEmails = new Set<string>();
+	private reportedUsageFailureKeys = new Set<string>();
 	private readyPromise: Promise<void> = Promise.resolve();
 	private readyResolve?: () => void;
 
@@ -96,6 +97,7 @@ export class AccountManager {
 
 	resetSessionWarnings(): void {
 		this.warnedAuthFailureEmails.clear();
+		this.reportedUsageFailureKeys.clear();
 	}
 
 	notifyRotationSkipForAuthFailure(account: Account, error: unknown): void {
@@ -155,6 +157,7 @@ export class AccountManager {
 			this.warnedAuthFailureEmails.delete(account.email);
 			changed = true;
 		}
+		this.clearUsageFailureReports(account.email);
 		return changed;
 	}
 
@@ -331,6 +334,32 @@ export class AccountManager {
 		this.notifyStateChanged();
 	}
 
+	private clearUsageFailureReports(email: string): void {
+		for (const key of this.reportedUsageFailureKeys) {
+			if (key.startsWith(`${email}:`)) {
+				this.reportedUsageFailureKeys.delete(key);
+			}
+		}
+	}
+
+	private reportUsageFailure(account: Account, error: unknown): void {
+		const message = normalizeUnknownError(error);
+		const key = `${account.email}:${message}`;
+		if (this.reportedUsageFailureKeys.has(key)) {
+			return;
+		}
+		this.reportedUsageFailureKeys.add(key);
+
+		const fullMessage = `Multicodex: failed to fetch usage for ${account.email}: ${message}`;
+		if (error instanceof UsageRequestError && error.status === 401) {
+			// Usage status polling can hit 401 repeatedly when an account is out of quota.
+			// Keep this silent instead of spamming ui.notify or console.debug in the TUI.
+			return;
+		}
+
+		this.warningHandler?.(fullMessage);
+	}
+
 	async refreshUsageForAccount(
 		account: Account,
 		options?: { force?: boolean; signal?: AbortSignal },
@@ -354,14 +383,11 @@ export class AccountManager {
 				timeoutMs: USAGE_REQUEST_TIMEOUT_MS,
 			});
 			this.usageCache.set(account.email, usage);
+			this.clearUsageFailureReports(account.email);
 			this.notifyStateChanged();
 			return usage;
 		} catch (error) {
-			this.warningHandler?.(
-				`Multicodex: failed to fetch usage for ${account.email}: ${normalizeUnknownError(
-					error,
-				)}`,
-			);
+			this.reportUsageFailure(account, error);
 			return undefined;
 		}
 	}

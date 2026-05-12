@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
 	storageData: {
@@ -305,6 +305,67 @@ describe("AccountManager auth-failure warnings", () => {
 
 		expect(warningHandler).toHaveBeenCalledTimes(1);
 		expect(warningHandler.mock.calls[0]?.[0]).toContain("/login openai-codex");
+	});
+});
+
+describe("AccountManager usage failure reporting", () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		vi.restoreAllMocks();
+	});
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mocks.storageData.accounts = [];
+		mocks.storageData.activeEmail = undefined;
+		mocks.loadImportedOpenAICodexAuth.mockResolvedValue(undefined);
+	});
+
+	it("silences usage 401 failures instead of notifying", async () => {
+		const fetch = vi.fn().mockResolvedValue({ ok: false, status: 401 });
+		vi.stubGlobal("fetch", fetch);
+		const debug = vi.spyOn(console, "debug").mockImplementation(() => {});
+		const manager = new AccountManager();
+		const warningHandler = vi.fn();
+		manager.setWarningHandler(warningHandler);
+		const account = manager.addOrUpdateAccount("quota@example.com", {
+			access: "access",
+			refresh: "refresh",
+			expires: Date.now() + 3600_000,
+		});
+
+		await manager.refreshUsageForAccount(account, { force: true });
+		await manager.refreshUsageForAccount(account, { force: true });
+
+		expect(fetch).toHaveBeenCalledTimes(2);
+		expect(warningHandler).not.toHaveBeenCalled();
+		expect(debug).not.toHaveBeenCalled();
+	});
+
+	it("deduplicates non-401 usage fetch warnings per session", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue({ ok: false, status: 500 }),
+		);
+		const manager = new AccountManager();
+		const warningHandler = vi.fn();
+		manager.setWarningHandler(warningHandler);
+		const account = manager.addOrUpdateAccount("down@example.com", {
+			access: "access",
+			refresh: "refresh",
+			expires: Date.now() + 3600_000,
+		});
+
+		await manager.refreshUsageForAccount(account, { force: true });
+		await manager.refreshUsageForAccount(account, { force: true });
+		expect(warningHandler).toHaveBeenCalledTimes(1);
+		expect(warningHandler.mock.calls[0]?.[0]).toContain(
+			"Usage request failed: 500",
+		);
+
+		manager.resetSessionWarnings();
+		await manager.refreshUsageForAccount(account, { force: true });
+		expect(warningHandler).toHaveBeenCalledTimes(2);
 	});
 });
 

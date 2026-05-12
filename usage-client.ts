@@ -14,6 +14,13 @@ interface WhamUsageResponse {
 	};
 }
 
+export class UsageRequestError extends Error {
+	constructor(public readonly status: number) {
+		super(`Usage request failed: ${status}`);
+		this.name = "UsageRequestError";
+	}
+}
+
 export async function fetchCodexUsage(
 	accessToken: string,
 	accountId: string | undefined,
@@ -39,7 +46,7 @@ export async function fetchCodexUsage(
 		});
 
 		if (!response.ok) {
-			throw new Error(`Usage request failed: ${response.status}`);
+			throw new UsageRequestError(response.status);
 		}
 
 		const data = (await response.json()) as WhamUsageResponse;
