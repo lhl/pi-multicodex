@@ -83,6 +83,7 @@ You can customize which fields appear and their ordering with `/multicodex foote
 ## What it does under the hood
 
 - **Provider override.** MultiCodex registers itself as the `openai-codex` provider. You do not need to select a different provider or change your model — it works with whatever Codex model you already use.
+- **Proxy/custom-provider compatibility.** If no managed or imported Codex account is available, MultiCodex does not publish a fake API key for its `openai-codex` override. That keeps custom `models.json` providers such as a proxy-backed `codex` provider from being shadowed just because this extension is installed.
 - **Auth import.** When pi has stored Codex OAuth credentials, MultiCodex imports them automatically and merges duplicate credentials into existing managed accounts when possible.
 - **Token refresh.** OAuth tokens are refreshed before expiry so requests do not fail due to stale credentials. You can also force a health refresh with `/multicodex refresh` or re-authenticate explicitly with `/multicodex reauth`.
 - **Usage tracking.** Usage data is fetched from the Codex API and cached for 5 minutes per account. The footer renders cached data immediately and refreshes in the background.

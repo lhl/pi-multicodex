@@ -20,10 +20,15 @@ export default function multicodexExtension(pi: ExtensionAPI) {
 		}
 	});
 
-	pi.registerProvider(
-		PROVIDER_ID,
-		buildMulticodexProviderConfig(accountManager),
-	);
+	const registerMulticodexProvider = () => {
+		pi.registerProvider(
+			PROVIDER_ID,
+			buildMulticodexProviderConfig(accountManager),
+		);
+	};
+
+	registerMulticodexProvider();
+	accountManager.onStateChange(registerMulticodexProvider);
 
 	registerCommands(pi, accountManager, statusController);
 

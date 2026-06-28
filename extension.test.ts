@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
 	buildMulticodexProviderConfig: vi.fn(() => ({ mocked: true })),
 	setWarningHandler: vi.fn(),
 	resetSessionWarnings: vi.fn(),
+	onStateChange: vi.fn(),
 	statusRefreshFor: vi.fn(),
 	statusStartAutoRefresh: vi.fn(),
 	statusStopAutoRefresh: vi.fn(),
@@ -18,6 +19,7 @@ vi.mock("./account-manager", () => ({
 	AccountManager: class MockAccountManager {
 		setWarningHandler = mocks.setWarningHandler;
 		resetSessionWarnings = mocks.resetSessionWarnings;
+		onStateChange = mocks.onStateChange;
 	},
 }));
 
@@ -55,6 +57,7 @@ describe("multicodexExtension", () => {
 		mocks.buildMulticodexProviderConfig.mockClear();
 		mocks.setWarningHandler.mockClear();
 		mocks.resetSessionWarnings.mockClear();
+		mocks.onStateChange.mockClear();
 		mocks.statusRefreshFor.mockClear();
 		mocks.statusStartAutoRefresh.mockClear();
 		mocks.statusStopAutoRefresh.mockClear();
@@ -79,6 +82,7 @@ describe("multicodexExtension", () => {
 		expect(registerProvider).toHaveBeenCalledWith("openai-codex", {
 			mocked: true,
 		});
+		expect(mocks.onStateChange).toHaveBeenCalledOnce();
 		expect(mocks.registerCommands).toHaveBeenCalledOnce();
 		expect(on).toHaveBeenCalledTimes(4);
 		expect(handlers.has("session_start")).toBe(true);

@@ -2,20 +2,22 @@ import { describe, expect, it, vi } from "vitest";
 import { handleNewSessionSwitch, handleSessionStart } from "./hooks";
 
 describe("handleSessionStart", () => {
-	it("does nothing when no accounts exist", () => {
-		const loadPiAuth = vi.fn();
-		const refreshUsageForAllAccounts = vi.fn();
-		const getAvailableManualAccount = vi.fn();
-		const hasManualAccount = vi.fn();
+	it("still imports pi auth when no managed accounts exist", async () => {
+		const loadPiAuth = vi.fn().mockResolvedValue(undefined);
+		const refreshUsageForAllAccounts = vi.fn().mockResolvedValue(undefined);
+		const getAvailableManualAccount = vi.fn().mockReturnValue(undefined);
+		const hasManualAccount = vi.fn().mockReturnValue(false);
 		const clearManualAccount = vi.fn();
-		const activateBestAccount = vi.fn();
+		const activateBestAccount = vi.fn().mockResolvedValue(undefined);
 		const beginInitialization = vi.fn();
 		const markReady = vi.fn();
 
 		handleSessionStart({
 			getAccounts: () => [],
 			loadPiAuth,
+			isPiAuthAccount: () => false,
 			refreshUsageForAllAccounts,
+			getAccountsNeedingReauth: () => [],
 			getAvailableManualAccount,
 			hasManualAccount,
 			clearManualAccount,
@@ -24,12 +26,16 @@ describe("handleSessionStart", () => {
 			markReady,
 		} as never);
 
-		expect(loadPiAuth).not.toHaveBeenCalled();
-		expect(refreshUsageForAllAccounts).not.toHaveBeenCalled();
-		expect(getAvailableManualAccount).not.toHaveBeenCalled();
-		expect(hasManualAccount).not.toHaveBeenCalled();
-		expect(clearManualAccount).not.toHaveBeenCalled();
-		expect(activateBestAccount).not.toHaveBeenCalled();
+		await vi.waitFor(() => {
+			expect(beginInitialization).toHaveBeenCalled();
+			expect(loadPiAuth).toHaveBeenCalled();
+			expect(refreshUsageForAllAccounts).toHaveBeenCalledWith({ force: true });
+			expect(getAvailableManualAccount).toHaveBeenCalled();
+			expect(hasManualAccount).toHaveBeenCalled();
+			expect(clearManualAccount).not.toHaveBeenCalled();
+			expect(activateBestAccount).toHaveBeenCalled();
+			expect(markReady).toHaveBeenCalled();
+		});
 	});
 
 	it("refreshes and activates when accounts exist and no manual account is available", async () => {

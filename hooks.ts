@@ -39,7 +39,6 @@ export function handleSessionStart(
 	accountManager: AccountManager,
 	warningHandler?: WarningHandler,
 ): void {
-	if (accountManager.getAccounts().length === 0) return;
 	refreshAndActivateBestAccount(accountManager, warningHandler).catch(() => {});
 }
 

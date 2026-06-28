@@ -102,7 +102,7 @@ export function getOpenAICodexMirror(): {
 	};
 }
 
-function getActiveApiKey(accountManager: AccountManager): string {
+function getActiveApiKey(accountManager: AccountManager): string | undefined {
 	const active = accountManager.getActiveAccount();
 	if (active && !active.needsReauth) {
 		return active.accessToken;
@@ -113,8 +113,10 @@ function getActiveApiKey(accountManager: AccountManager): string {
 			return account.accessToken;
 		}
 	}
-	// Fallback placeholder until MultiCodex resolves a usable managed account.
-	return "pending-login";
+	// No managed/imported account is available yet. Leave auth unconfigured so
+	// pi does not treat MultiCodex's openai-codex override as available and
+	// accidentally steal sessions from a custom models.json proxy provider.
+	return undefined;
 }
 
 export function buildMulticodexProviderConfig(accountManager: AccountManager) {

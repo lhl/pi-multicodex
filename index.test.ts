@@ -82,6 +82,16 @@ describe("buildMulticodexProviderConfig", () => {
 		expect(config.models).toEqual(mirror.models);
 		expect(typeof config.streamSimple).toBe("function");
 	});
+
+	it("does not advertise fake auth when no account is available", () => {
+		const fakeManager = {
+			getActiveAccount: () => undefined,
+			getAccounts: () => [],
+		} as unknown as AccountManager;
+		const config = buildMulticodexProviderConfig(fakeManager);
+
+		expect(config.apiKey).toBeUndefined();
+	});
 });
 
 function makeAccount(email: string, overrides?: Partial<Account>): Account {
