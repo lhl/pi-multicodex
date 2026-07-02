@@ -102,9 +102,11 @@ export function getOpenAICodexMirror(): {
 	};
 }
 
-function getActiveApiKey(accountManager: AccountManager): string | undefined {
+export function getActiveApiKey(
+	accountManager: AccountManager,
+): string | undefined {
 	const active = accountManager.getActiveAccount();
-	if (active && !active.needsReauth) {
+	if (active && !active.needsReauth && active.accessToken) {
 		return active.accessToken;
 	}
 	// Fallback: first available account with a valid token.
@@ -120,6 +122,11 @@ function getActiveApiKey(accountManager: AccountManager): string | undefined {
 }
 
 export function buildMulticodexProviderConfig(accountManager: AccountManager) {
+	const apiKey = getActiveApiKey(accountManager);
+	if (!apiKey) {
+		return undefined;
+	}
+
 	const mirror = getOpenAICodexMirror();
 	const baseProvider = getApiProvider("openai-codex-responses");
 	if (!baseProvider) {
@@ -130,7 +137,7 @@ export function buildMulticodexProviderConfig(accountManager: AccountManager) {
 
 	return {
 		baseUrl: mirror.baseUrl,
-		apiKey: getActiveApiKey(accountManager),
+		apiKey,
 		api: "openai-codex-responses" as const,
 		streamSimple: createStreamWrapper(accountManager, baseProvider),
 		models: mirror.models,

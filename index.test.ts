@@ -5,6 +5,7 @@ import {
 	type AccountManager,
 	buildMulticodexProviderConfig,
 	createStreamWrapper,
+	getActiveApiKey,
 	getNextResetAt,
 	getOpenAICodexMirror,
 	getWeeklyResetAt,
@@ -76,11 +77,29 @@ describe("buildMulticodexProviderConfig", () => {
 		} as unknown as AccountManager;
 		const config = buildMulticodexProviderConfig(fakeManager);
 
-		expect(config.api).toBe("openai-codex-responses");
-		expect(config.apiKey).toBe("test-jwt.eyJ0ZXN0IjoxfQ.sig");
-		expect(config.baseUrl).toBe(mirror.baseUrl);
-		expect(config.models).toEqual(mirror.models);
-		expect(typeof config.streamSimple).toBe("function");
+		expect(config?.api).toBe("openai-codex-responses");
+		expect(config?.apiKey).toBe("test-jwt.eyJ0ZXN0IjoxfQ.sig");
+		expect(config?.baseUrl).toBe(mirror.baseUrl);
+		expect(config?.models).toEqual(mirror.models);
+		expect(typeof config?.streamSimple).toBe("function");
+	});
+
+	it("does not build a provider config without usable auth", () => {
+		const fakeManager = {
+			getActiveAccount: () => ({
+				accessToken: "expired-token",
+				needsReauth: true,
+			}),
+			getAccounts: () => [
+				{
+					accessToken: "also-expired",
+					needsReauth: true,
+				},
+			],
+		} as unknown as AccountManager;
+
+		expect(getActiveApiKey(fakeManager)).toBeUndefined();
+		expect(buildMulticodexProviderConfig(fakeManager)).toBeUndefined();
 	});
 
 	it("does not advertise fake auth when no account is available", () => {
@@ -88,9 +107,9 @@ describe("buildMulticodexProviderConfig", () => {
 			getActiveAccount: () => undefined,
 			getAccounts: () => [],
 		} as unknown as AccountManager;
-		const config = buildMulticodexProviderConfig(fakeManager);
 
-		expect(config.apiKey).toBeUndefined();
+		expect(getActiveApiKey(fakeManager)).toBeUndefined();
+		expect(buildMulticodexProviderConfig(fakeManager)).toBeUndefined();
 	});
 });
 

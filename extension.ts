@@ -9,7 +9,7 @@ import { handleNewSessionSwitch, handleSessionStart } from "./hooks";
 import { buildMulticodexProviderConfig, PROVIDER_ID } from "./provider";
 import { createUsageStatusController } from "./status";
 
-export default function multicodexExtension(pi: ExtensionAPI) {
+export default async function multicodexExtension(pi: ExtensionAPI) {
 	const accountManager = new AccountManager();
 	const statusController = createUsageStatusController(accountManager);
 	let lastContext: ExtensionContext | undefined;
@@ -20,15 +20,18 @@ export default function multicodexExtension(pi: ExtensionAPI) {
 		}
 	});
 
-	const registerMulticodexProvider = () => {
-		pi.registerProvider(
-			PROVIDER_ID,
-			buildMulticodexProviderConfig(accountManager),
-		);
+	const syncProvider = () => {
+		const config = buildMulticodexProviderConfig(accountManager);
+		if (!config) {
+			pi.unregisterProvider(PROVIDER_ID);
+			return;
+		}
+		pi.registerProvider(PROVIDER_ID, config);
 	};
 
-	registerMulticodexProvider();
-	accountManager.onStateChange(registerMulticodexProvider);
+	await accountManager.loadPiAuth();
+	syncProvider();
+	accountManager.onStateChange(syncProvider);
 
 	registerCommands(pi, accountManager, statusController);
 

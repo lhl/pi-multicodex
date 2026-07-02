@@ -3,6 +3,7 @@ export { parseImportedOpenAICodexAuth } from "./auth";
 export { default } from "./extension";
 export {
 	buildMulticodexProviderConfig,
+	getActiveApiKey,
 	getOpenAICodexMirror,
 	PROVIDER_ID,
 	type ProviderModelDef,
